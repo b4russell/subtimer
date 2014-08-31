@@ -1,0 +1,58 @@
+body {
+  font-family: Helvetica;
+  font-weight: bold;
+  background-color: black;
+  margin: 0px;
+  border: 1px solid white;
+}
+
+.player {
+  position: relative;
+  padding: 0.8em;
+  border: 1px solid white;
+  background-color: black;
+  color: white;
+  text-transform: uppercase;
+}
+
+.player .timebar {
+  background-color: red;
+}
+
+.player.running {
+  background-color: #004400;
+}
+
+.player.running .timebar {
+  background-color: green;
+}
+
+.player .subtime {
+  font-weight: bold;
+}
+
+.subout, .subin {
+  text-shadow: 0px 0px 5px yellow;
+}
+
+.timebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0px;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.clock {
+  position: relative;
+  float: right;
+  z-index: 10;
+}
+.name {
+  position: relative;
+  display: inline-block;
+  z-index: 10;
+}

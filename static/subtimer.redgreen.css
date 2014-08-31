@@ -1,0 +1,33 @@
+body {
+  font-family: Helvetica;
+  font-weight: bold;
+  margin: 1px;
+}
+
+.player {
+  position: relative;
+  height: 10%;
+  padding: 0.9em;
+  border: 1px solid white;
+  background-color: red;
+  color: white;
+  text-transform: uppercase;
+}
+
+.player.running {
+  background-color: green;
+}
+
+.timebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0px;
+  height: 100%;
+  background-color: white;
+  opacity: 0.5;
+}
+
+.clock {
+  float: right;
+}
