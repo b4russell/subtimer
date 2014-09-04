@@ -1,34 +1,39 @@
-## -*- coding: utf-8 -*-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <head>
-        ##<link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
-        ##<link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">  
 	      <link rel="stylesheet" type="text/css" href="/static/subtimer.css"/>
         <script type ="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        ##<script type="text/javascript" src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
+        <script src="/static/javascripts/handlebars.min.js"></script>
         <script src="/static/javascripts/fastclick.min.js"></script>
         <script src="/static/javascripts/timer.js"></script>
-        ##<link href='http://fonts.googleapis.com/css?family=Anton' rel='stylesheet' type='text/css'>
 	    <meta charset='UTF-8'>
       <meta name="viewport" content="width=device-width, initial-scale=0.9, user-scalable=no">
       <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
+<div class="players">
 
-%for name in sorted(['Joseph', 'Louis', 'Gabriel J.', 'Gabriel A.', 'Julian', 'Cooper', 'Luke', 'Dylan', 'Taryn', 'Oliver', 'Janelli']):
-<div class="player" id="${name}" base="0">
-##  ${name}
-##  <div class="clock">
-##    00:00
-##  </div>
+</div>
+
+<div id="addplayer">
+  +
+</div>
+
+<div id="reset">
+  RESET
+</div>
+
+</body>
+
+<script id="player-template" type="text/x-handlebars-template">
+<div class="player" id="{{name}}" base="{{base}}" runstart="{{runstart}}">
   <div class="timebar">
   </div>
     <div class="name">
-    ${name}
+      {{name}}
   </div>
   <div class="clock">
-    00:00
+      {{clock}}
   </div>
 </div>
-%endfor
-</body>
+</script>
+

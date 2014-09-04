@@ -2,6 +2,7 @@ body {
   font-family: Helvetica;
   font-weight: bold;
   background-color: black;
+  color: white;
   margin: 0px;
   border: 1px solid white;
 }
@@ -11,7 +12,6 @@ body {
   padding: 0.8em;
   border: 1px solid white;
   background-color: black;
-  color: white;
   text-transform: uppercase;
 }
 
@@ -51,8 +51,10 @@ body {
   float: right;
   z-index: 10;
 }
+
 .name {
   position: relative;
   display: inline-block;
   z-index: 10;
 }
+

@@ -1,5 +1,5 @@
 /*jslint browser: true, devel: true*/
-/*global $, jQuery, alert, FastClick*/
+/*global $, jQuery, alert, FastClick, Handlebars*/
 $(document).ready(function () {
     "use strict";
     var increment = function (element) {
@@ -8,14 +8,13 @@ $(document).ready(function () {
         element.text(currentTime + 1);
     },
         GAME_LENGTH = 30,
-        MS_INCREMENT = 1000,
+        MS_INCREMENT = 1000000000,
         SUM_TIMES = 0,
 //        SUM_DEVIATIONS = 0,
         AVERAGE_TIME = 0,
         STANDARD_DEVIATION = 5 * 1000,
         SUM_DEVIATIONS = 0,
         MIN_TIME = 0,
-        TEMP_MIN_TIME = 10000000000000,
         MAX_TIME = 0,
         totalTime = function (element) {
             var offset = 0;
@@ -23,6 +22,16 @@ $(document).ready(function () {
                 offset = Date.now() - parseInt(element.attr("runstart"), 10);
             }
             return parseInt(element.attr("base"), 10) + offset;
+        },
+        numPlayers = localStorage.length,
+        storedPlayers = [],
+        i = 0,
+        playersTemplate = Handlebars.compile($('#player-template').html()),
+        appendPlayer = function (player, playerData) {
+            console.log(playerData);
+            $("body").append(playersTemplate(
+                {"name": player, "base": playerData.base, "runstart": playerData.runstart, "clock": "test"}
+            ));
         },
         dt = new Date();
 //    var follow = function (bill, currentValue, callback) {
@@ -34,7 +43,21 @@ $(document).ready(function () {
             $(this).attr("runstart", Date.now());
         }
         $(this).toggleClass("running");
+        $(this).store();
     });
+
+    $("#reset").click(function () {
+        localStorage.clear();
+    });
+
+    $("#addplayer").click(function () {
+        $(this).attr("contenteditable", "true");
+    });
+
+    $("#confirmaddplayer").click(function () {
+        localStorage[$(this).sibling(".player")] = JSON.stringify({"base": 0, "runstart": 0, "running": false});
+    });
+
 
     Number.prototype.displayTime = function () {
         var ms = this,
@@ -45,6 +68,17 @@ $(document).ready(function () {
         minutes = minutes < 10 ? "0" + minutes : minutes;
         hours = hours < 10 ? "0" + hours : hours;
         return hours > 0 ? hours + ":" + minutes + ":" + seconds : minutes + ":" + seconds;
+    };
+
+    $.fn.store = function () {
+        var name = $(this).attr("id"),
+            base = $(this).attr("base"),
+            runstart = $(this).attr("runstart"),
+            running = $(this).hasClass("running");
+        localStorage[name] = JSON.stringify({"base": base, "runstart": runstart, "running": running});
+        console.log(name, base, localStorage[name]);
+        console.log(JSON.parse(localStorage[name]));
+
     };
 
     $.fn.increment = function () {
@@ -59,6 +93,7 @@ $(document).ready(function () {
             }
         });
     };
+
     $.fn.subout = function () {
         return this.each(function () {
             var currentTime = totalTime($(this)),
@@ -82,6 +117,14 @@ $(document).ready(function () {
             }
         });
     };
+
+    Array.prototype.loadPlayers = function () {
+        this.forEach(function (player) {
+            var playerData = JSON.parse(localStorage[player]);
+            appendPlayer(player, playerData);
+        });
+    };
+ 
 //    $.fn.subin = function () {
 //        return this.each(function () {
 //            var currentTime = totalTime($(this));
@@ -119,6 +162,12 @@ $(document).ready(function () {
         $(".player").subout();
     }, MS_INCREMENT);
 
-});
+    if (numPlayers) {
+        for (i = 0; i < numPlayers; i += 1) {
+            storedPlayers[i] = localStorage.key(i);
+        }
+        storedPlayers.sort().loadPlayers();
+    }
 
+});
 
