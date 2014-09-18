@@ -4,35 +4,55 @@
         <script type ="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script src="/static/javascripts/handlebars.min.js"></script>
         <script src="/static/javascripts/fastclick.min.js"></script>
+        <script src="/static/javascripts/easing.min.js"></script>
         <script src="/static/javascripts/timer.js"></script>
 	    <meta charset='UTF-8'>
       <meta name="viewport" content="width=device-width, initial-scale=0.9, user-scalable=no">
       <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
-<div class="players">
-
+<div id="overlay">
+</div>
+<div id="welcome">
+  Sub Timer helps you track your team members' playing times. To get started, edit your team and add players!
+</div>
+<div class="allplayers">
+  <div class="players">
+  
+  </div>
+  <div id="newplayerrow" class="edit">
+    <div id="createplayer" class="button">
+      Add
+    </div>
+    <div id="newplayer" contenteditable="true" >
+      New Player
+    </div>
+    <div id="confirmaddplayer" class="button">
+      Confirm
+    </div>
+  </div>
 </div>
 
-<div id="addplayer">
-  +
+<div id="editteam" class="button" toggletext="Done Editing">
+  Edit Team
 </div>
 
-<div id="reset">
-  RESET
+
+<div id="reset" class="button">
+  Reset Times
 </div>
 
 </body>
 
 <script id="player-template" type="text/x-handlebars-template">
-<div class="player" id="{{name}}" base="{{base}}" runstart="{{runstart}}">
-  <div class="timebar">
+<div class="player{{running}}" id="{{id}}" base="{{base}}" runstart="{{runstart}}">
+<div class="edit button delete"> Delete </div>
+  <div class="timebar"> </div>
+  <div class="clock">
+      00:00
   </div>
     <div class="name">
       {{name}}
-  </div>
-  <div class="clock">
-      {{clock}}
   </div>
 </div>
 </script>

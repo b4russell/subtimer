@@ -1,14 +1,13 @@
 /*jslint browser: true, devel: true*/
 /*global $, jQuery, alert, FastClick, Handlebars*/
+/*TODO
+ * Fix delete last player
+ * Fix sort
+ */
 $(document).ready(function () {
     "use strict";
-    var increment = function (element) {
-        var currentTime = element.text().parseFloat();
-        console.log(currentTime);
-        element.text(currentTime + 1);
-    },
-        GAME_LENGTH = 30,
-        MS_INCREMENT = 1000000000,
+    var GAME_LENGTH = 10,
+        MS_INCREMENT = 1000,
         SUM_TIMES = 0,
 //        SUM_DEVIATIONS = 0,
         AVERAGE_TIME = 0,
@@ -23,42 +22,71 @@ $(document).ready(function () {
             }
             return parseInt(element.attr("base"), 10) + offset;
         },
-        numPlayers = localStorage.length,
-        storedPlayers = [],
-        i = 0,
+        refreshPlayers = function () {
+            AVERAGE_TIME = SUM_TIMES / $(".player").length;
+            STANDARD_DEVIATION = Math.sqrt(SUM_DEVIATIONS / $(".player").length);
+            MAX_TIME = AVERAGE_TIME + STANDARD_DEVIATION;
+            MIN_TIME = AVERAGE_TIME - STANDARD_DEVIATION;
+            SUM_TIMES = 0;
+            SUM_DEVIATIONS = 0;
+            $(".player").increment();
+            $(".player").subout();
+        },
+        reloadPlayers = function () {
+            var i = 0,
+                storedPlayers = [],
+                numPlayers = localStorage.length;
+            if (numPlayers) {
+                for (i = 0; i < numPlayers; i += 1) {
+                    storedPlayers[i] = localStorage.key(i);
+                }
+                $("#welcome").hide();
+            } else { $("#welcome").show(); }
+            storedPlayers.sort().loadPlayers();
+            refreshPlayers();
+        },
+        resetTime = function (idx, elt) {
+            var name = $(elt).find(".name").text().trim();
+            localStorage[$(elt).attr('id')] = JSON.stringify({"name": name, "base": 0, "runstart": 0, "running": false});
+            console.log($(elt).attr('id'));
+        },
+        resetTimes = function () {
+            $(".player").each(resetTime);
+            reloadPlayers();
+        },
         playersTemplate = Handlebars.compile($('#player-template').html()),
+        subToggle = function () {
+            if ($(this).hasClass("running")) {
+                $(this).attr("base", totalTime($(this)));
+            } else {
+                $(this).attr("runstart", Date.now());
+            }
+            $(this).toggleClass("running");
+            $(this).store();
+        },
+        deletePlayer = function (e) {
+            var id = $(this).parent().attr('id');
+            e.stopPropagation();
+            localStorage.removeItem(id);
+            reloadPlayers();
+            $(".edit").show();
+        },
         appendPlayer = function (player, playerData) {
-            console.log(playerData);
-            $("body").append(playersTemplate(
-                {"name": player, "base": playerData.base, "runstart": playerData.runstart, "clock": "test"}
+            $(".players").append(playersTemplate(
+                {"id": player, "name": playerData.name, "base": playerData.base, "runstart": playerData.runstart, "running": playerData.running ? " running" : ""}
             ));
+        },
+        addPlayer = function (player) {
+            console.log(player);
+            player = player.trim();
+            localStorage[player.replace(" ", "_")] = JSON.stringify({"name": player, "base": 0, "runstart": 0, "running": false});
+            reloadPlayers();
+            $(".edit").show();
+            console.log($(".player"));
         },
         dt = new Date();
 //    var follow = function (bill, currentValue, callback) {
     FastClick.attach(document.body);
-    $(".player").click(function () {
-        if ($(this).hasClass("running")) {
-            $(this).attr("base", totalTime($(this)));
-        } else {
-            $(this).attr("runstart", Date.now());
-        }
-        $(this).toggleClass("running");
-        $(this).store();
-    });
-
-    $("#reset").click(function () {
-        localStorage.clear();
-    });
-
-    $("#addplayer").click(function () {
-        $(this).attr("contenteditable", "true");
-    });
-
-    $("#confirmaddplayer").click(function () {
-        localStorage[$(this).sibling(".player")] = JSON.stringify({"base": 0, "runstart": 0, "running": false});
-    });
-
-
     Number.prototype.displayTime = function () {
         var ms = this,
             hours = Math.floor(ms / 3600000),
@@ -71,13 +99,13 @@ $(document).ready(function () {
     };
 
     $.fn.store = function () {
-        var name = $(this).attr("id"),
+        var name = $(this).find(".name").text().trim(),
+            id = name.replace(" ", "_"),
             base = $(this).attr("base"),
             runstart = $(this).attr("runstart"),
             running = $(this).hasClass("running");
-        localStorage[name] = JSON.stringify({"base": base, "runstart": runstart, "running": running});
-        console.log(name, base, localStorage[name]);
-        console.log(JSON.parse(localStorage[name]));
+        localStorage[id] = JSON.stringify({"name": name, "base": base, "runstart": runstart, "running": running});
+        console.log(JSON.parse(localStorage[id]));
 
     };
 
@@ -119,55 +147,76 @@ $(document).ready(function () {
     };
 
     Array.prototype.loadPlayers = function () {
+        $(".players").empty();
         this.forEach(function (player) {
             var playerData = JSON.parse(localStorage[player]);
             appendPlayer(player, playerData);
         });
     };
- 
-//    $.fn.subin = function () {
-//        return this.each(function () {
-//            var currentTime = totalTime($(this));
-//            if (currentTime < MIN_TIME) {
-//                $(this).addClass("subin");
-//            } else {
-//                $(this).removeClass("subin");
-//            }
-//        });
-//    };
+
+    reloadPlayers();
+    $(".players").on("click", ".player", subToggle);
+    $(".players").on("click", ".delete", deletePlayer);
+
+    $("#reset").click(function () {
+        //localStorage.clear();
+        resetTimes();
+    });
+
+    $(".delete").click(function () {
+        console.log("test");
+    });
 
 
-    setInterval(function () {
-        AVERAGE_TIME = SUM_TIMES / $(".player").length;
-        STANDARD_DEVIATION = Math.sqrt(SUM_DEVIATIONS / $(".player").length);
-//        MIN_TIME = TEMP_MIN_TIME;
-//        TEMP_MIN_TIME = MAX_TIME;
-        MAX_TIME = AVERAGE_TIME + STANDARD_DEVIATION;
-        MIN_TIME = AVERAGE_TIME - STANDARD_DEVIATION;
-//        console.log(AVERAGE_TIME);
-        SUM_TIMES = 0;
-        SUM_DEVIATIONS = 0;
-//        var TIMES = $(".player").map(function () {
-//            return totalTime($(this));
-//        }),
-//            sum = 0;
-//        TIMES.each(function (elt, idx, array) {
-//            if (!isNaN(idx)) {
-//                sum += idx;
-//            }
-//        });
-//        AVERAGE_TIME = sum / $(".player").length;
-//        console.log(AVERAGE_TIME);
-        $(".player").increment();
-        $(".player").subout();
-    }, MS_INCREMENT);
+    $("#createplayer").click(function () {
+        $("#newplayer").empty();
+        $("#newplayer").focus();
+        $("#confirmaddplayer").hide();
+    });
 
-    if (numPlayers) {
-        for (i = 0; i < numPlayers; i += 1) {
-            storedPlayers[i] = localStorage.key(i);
+    $("#confirmaddplayer").click(function () {
+        var playerName = $(this).siblings("#newplayer").text();
+        if (playerName) {
+            addPlayer(playerName);
+            $("#newplayer").empty();
+            //$("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
+            $(this).hide();
         }
-        storedPlayers.sort().loadPlayers();
-    }
+    });
+    $("#newplayer").focus(function () {
+        console.log(window.getSelection());
+    });
+    $("#editteam").click(function () {
+        var currentText = $(this).text();
+        console.log($(".edit"));
+        $(".edit").toggle();
+        $(this).text($(this).attr("toggletext"));
+        $(this).attr("toggletext", currentText);
+        $("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
+        //$(".timebar").toggle();
+    });
+
+    $("#newplayer").keyup(function (e) {
+        //var target = $(e.target);
+        //var focused = $(document.activeElement),
+        //    inputting = focused.get(0).tagName.toLowerCase() === "textarea" || focused.get(0).tagName.toLowerCase() === "input";
+        // / (forward slash) key = search
+        if ($(this).text().trim()) {
+            $("#confirmaddplayer").show();
+        } else {
+            $("#confirmaddplayer").hide();
+        }
+
+        if (e.which === 13) {
+            e.preventDefault();
+            $("#confirmaddplayer").click();
+            return;
+        }
+    });
+
+
+
+    setInterval(refreshPlayers, MS_INCREMENT);
 
 });
 
