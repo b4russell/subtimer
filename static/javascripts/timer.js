@@ -9,12 +9,12 @@ $(document).ready(function () {
     var GAME_LENGTH = 10,
         MS_INCREMENT = 1000,
         SUM_TIMES = 0,
-//        SUM_DEVIATIONS = 0,
         AVERAGE_TIME = 0,
         STANDARD_DEVIATION = 5 * 1000,
         SUM_DEVIATIONS = 0,
         MIN_TIME = 0,
         MAX_TIME = 0,
+        EDIT_MODE = false,
         totalTime = function (element) {
             var offset = 0;
             if (element.hasClass("running")) {
@@ -23,14 +23,21 @@ $(document).ready(function () {
             return parseInt(element.attr("base"), 10) + offset;
         },
         refreshPlayers = function () {
-            AVERAGE_TIME = SUM_TIMES / $(".player").length;
-            STANDARD_DEVIATION = Math.sqrt(SUM_DEVIATIONS / $(".player").length);
+            var numPlayers = $(".player").length;
+            AVERAGE_TIME = SUM_TIMES / numPlayers + MS_INCREMENT;
+            STANDARD_DEVIATION = Math.sqrt(SUM_DEVIATIONS / numPlayers);
             MAX_TIME = AVERAGE_TIME + STANDARD_DEVIATION;
             MIN_TIME = AVERAGE_TIME - STANDARD_DEVIATION;
             SUM_TIMES = 0;
             SUM_DEVIATIONS = 0;
             $(".player").increment();
             $(".player").subout();
+            if (SUM_TIMES && !EDIT_MODE) {
+                $("#reset").removeClass("disabled");
+            } else {
+                $("#reset").addClass("disabled");
+            }
+            console.log("standard deviation:" + STANDARD_DEVIATION + ", average: " + AVERAGE_TIME);
         },
         reloadPlayers = function () {
             var i = 0,
@@ -40,9 +47,18 @@ $(document).ready(function () {
                 for (i = 0; i < numPlayers; i += 1) {
                     storedPlayers[i] = localStorage.key(i);
                 }
-                $("#welcome").hide();
-            } else { $("#welcome").show(); }
-            storedPlayers.sort().loadPlayers();
+                if ($("#welcome").is(":visible")) {
+                    $("#welcome").fadeOut(function () {
+                        $("#instructions").fadeIn();
+                    });
+                }
+            } else {
+                $("#instructions").hide();
+                $("#welcome").fadeIn();
+            }
+            storedPlayers.sort(function (a, b) {
+                return a.localeCompare(b, 'en', {'sensitivity': 'base'});
+            }).loadPlayers();
             refreshPlayers();
         },
         resetTime = function (idx, elt) {
@@ -63,13 +79,16 @@ $(document).ready(function () {
             }
             $(this).toggleClass("running");
             $(this).store();
+            $("#instructions").fadeOut();
         },
         deletePlayer = function (e) {
             var id = $(this).parent().attr('id');
             e.stopPropagation();
             localStorage.removeItem(id);
-            reloadPlayers();
-            $(".edit").show();
+            $(this).parent().slideUp(200, function () {
+                reloadPlayers();
+                $(".edit").show();
+            });
         },
         appendPlayer = function (player, playerData) {
             $(".players").append(playersTemplate(
@@ -77,12 +96,17 @@ $(document).ready(function () {
             ));
         },
         addPlayer = function (player) {
-            console.log(player);
+            var playerName = encodeURIComponent(player.trim());
             player = player.trim();
-            localStorage[player.replace(" ", "_")] = JSON.stringify({"name": player, "base": 0, "runstart": 0, "running": false});
-            reloadPlayers();
-            $(".edit").show();
-            console.log($(".player"));
+            if (playerName && !localStorage[playerName]) {
+                localStorage[playerName] = JSON.stringify({"name": player, "base": 0, "runstart": 0, "running": false});
+                reloadPlayers();
+                $(".edit").show();
+                $("#newplayer").val('');
+                $('#confirmaddplayer').addClass("disabled");
+            } else {
+                console.log($('#' + playerName));
+            }
         },
         dt = new Date();
 //    var follow = function (bill, currentValue, callback) {
@@ -100,7 +124,7 @@ $(document).ready(function () {
 
     $.fn.store = function () {
         var name = $(this).find(".name").text().trim(),
-            id = name.replace(" ", "_"),
+            id = encodeURIComponent(name),
             base = $(this).attr("base"),
             runstart = $(this).attr("runstart"),
             running = $(this).hasClass("running");
@@ -114,7 +138,7 @@ $(document).ready(function () {
             if ($(this).text()) {
                 var currentTime = totalTime($(this));
                 $(this).find(".clock").text(currentTime.displayTime());
-                if (currentTime > GAME_LENGTH * 60 * 1000) {
+                while (currentTime > GAME_LENGTH * 60 * 1000) {
                     GAME_LENGTH *= 1.5;
                 }
                 $(this).find(".timebar").width($(this).width() * currentTime / (GAME_LENGTH * 60 * 1000));
@@ -133,12 +157,12 @@ $(document).ready(function () {
             //} else if (currentTime > MAX_TIME) {
             //    MAX_TIME = currentTime;
             //}
-            if (currentTime > MAX_TIME && $(this).hasClass("running")) {
+            if (currentTime > MAX_TIME && $(this).hasClass("running") && STANDARD_DEVIATION > 60000) {
                 $(this).addClass("subout");
             } else {
                 $(this).removeClass("subout");
             }
-            if (currentTime < MIN_TIME && !$(this).hasClass("running")) {
+            if (currentTime < MIN_TIME && !$(this).hasClass("running") && STANDARD_DEVIATION > 60000) {
                 $(this).addClass("subin");
             } else {
                 $(this).removeClass("subin");
@@ -160,39 +184,62 @@ $(document).ready(function () {
 
     $("#reset").click(function () {
         //localStorage.clear();
-        resetTimes();
+        if (!$(this).hasClass("disabled")) {
+            resetTimes();
+        }
     });
-
-    $(".delete").click(function () {
-        console.log("test");
-    });
-
 
     $("#createplayer").click(function () {
-        $("#newplayer").empty();
+        //$("#newplayer").val('');
+        $("#newplayer").show();
+        //$("#newplayer").attr("contenteditable", "true");
         $("#newplayer").focus();
-        $("#confirmaddplayer").hide();
+        $("#confirmaddplayer").show();
+        $("#confirmaddplayer").addClass("disabled");
     });
 
     $("#confirmaddplayer").click(function () {
-        var playerName = $(this).siblings("#newplayer").text();
+        var playerName = $(this).siblings("#newplayer").val().toLowerCase();
         if (playerName) {
             addPlayer(playerName);
-            $("#newplayer").empty();
-            //$("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
+            $("#createplayer").show();
             $(this).hide();
+            $('#newplayer').hide();
+//$("#newplayer").attr("contenteditable", "true");
+            //$("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
         }
     });
-    $("#newplayer").focus(function () {
+    $("#newplayer").focusin(function () {
+        $("#createplayer").hide();
+        $(this).outerWidth($(this).parent().width() - ($('#confirmaddplayer').outerWidth() + 1));
         console.log(window.getSelection());
+    });
+    $("#newplayer").focusout(function () {
+        if (!$(this).val().trim()) {
+            $("#createplayer").show();
+            $(this).hide();
+            $('#confirmaddplayer').hide();
+        }
+//$("#newplayer").attr("contenteditable", "false");
+        //if ($(this).val().trim()) {
+        //    $("#createplayer").removeClass('disabled');
+        //}
+        //$("#confirmaddplayer").hide();
+        //$(this).outerWidth($(this).parent().width() - ($('#confirmaddplayer').outerWidth() + $('#createplayer').outerWidth() + 1));
     });
     $("#editteam").click(function () {
         var currentText = $(this).text();
-        console.log($(".edit"));
-        $(".edit").toggle();
+        EDIT_MODE = !$(".edit").is(":visible");
+        $(".edit#newplayerrow").slideToggle(200);
+        $(".edit.delete.button").toggle();
+        //        left: parseInt($(this).css('left'), 10) === 0 ? -$(this).outerWidth() : 0
+        //});
         $(this).text($(this).attr("toggletext"));
         $(this).attr("toggletext", currentText);
-        $("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
+        //$("body, html").animate({ scrollTop: $(this).offset().top }, "slow");
+        if (EDIT_MODE) {
+            $("#reset").addClass("disabled");
+        }
         //$(".timebar").toggle();
     });
 
@@ -201,15 +248,16 @@ $(document).ready(function () {
         //var focused = $(document.activeElement),
         //    inputting = focused.get(0).tagName.toLowerCase() === "textarea" || focused.get(0).tagName.toLowerCase() === "input";
         // / (forward slash) key = search
-        if ($(this).text().trim()) {
-            $("#confirmaddplayer").show();
+        if ($(this).val().trim()) {
+            $("#confirmaddplayer").removeClass("disabled");
         } else {
-            $("#confirmaddplayer").hide();
+            $("#confirmaddplayer").addClass("disabled");
         }
 
         if (e.which === 13) {
+            addPlayer($(this).val().toLowerCase());
             e.preventDefault();
-            $("#confirmaddplayer").click();
+            //$("#confirmaddplayer").click();
             return;
         }
     });
