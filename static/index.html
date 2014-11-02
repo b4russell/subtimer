@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<title> Sub Timer </title>
+<head>
+	      <link rel="stylesheet" type="text/css" href="/subtimer.css"/>
+        <script type ="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="/javascripts/handlebars.runtime.js"></script>
+	<script src="/javascripts/playerlist.js"></script>
+        <script src="/javascripts/fastclick.min.js"></script>
+        <script src="/javascripts/timer.js"></script>
+	    <meta charset='UTF-8'>
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<div id="overlay">
+</div>
+<div id="welcome">
+  Sub Timer helps you track playing times for your team members. To get started, edit your team and add some players!
+</div>
+<div id="instructions">
+  Just tap a player&#8217;s name to substitute in or out.
+</div>
+<div class="allplayers">
+  <div class="players">
+  
+  </div>
+  <div id="newplayerrow" class="edit">
+    <div id="createplayer" class="button">
+      Add New Player
+    </div>
+    <input class="name" id="newplayer">
+    </input>
+    <div id="confirmaddplayer" class="button disabled">
+      Add
+    </div>
+    <div class="clear"></div>
+  </div>
+</div>
+
+<div id="editteam" class="button" toggletext="Done Editing Team">
+  Edit Team
+</div>
+
+
+<div id="reset" class="button">
+  Reset Times
+</div>
+
+</body>
+
