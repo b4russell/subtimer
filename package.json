@@ -1,0 +1,23 @@
+{
+  "name": "subtimer",
+  "version": "1.0.0",
+  "description": "Subtimer helps parents and coaches track playing times for their team members.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "soccer",
+    "basketball",
+    "football",
+    "youth",
+    "sports"
+  ],
+  "author": "Ben Russell",
+  "license": "ISC",
+  "dependencies": {
+    "connect": "^3.2.0",
+    "serve-static": "^1.7.0"
+  }
+}
